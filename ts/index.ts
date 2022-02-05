@@ -78,7 +78,7 @@ class Counter {
     //TODO anyをしゅうせい
     let query_string = "";
     for (const p in param) {
-      let joint = query_string ? "&" : "";
+      const joint = query_string ? "&" : "";
       query_string +=
         joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
     }
