@@ -8,7 +8,21 @@ type Tickets = {
   engineer: string;
 };
 
-type Target = "Web" | "iOS" | "Android";
+interface Target {
+  Web: string;
+  iOS: string;
+  Android: string;
+}
+
+const targets = ["Web", "iOS", "Android"] as const;
+// type TargetKey = typeof targets[number];
+type TargetKey = keyof Target;
+// type CounterStore = {
+//   [key in CounterType]: Counter;
+// };
+
+const counterTypes = ["enginnerFixed", "offshoreFixed"] as const;
+type CounterType = typeof counterTypes[number];
 
 class BugCounter {
   private SPACE_ID = process.env.SPACE_ID;
@@ -16,6 +30,8 @@ class BugCounter {
   private PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
   private SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
   private COUNT = 100;
+
+  // constructor(private readonly gameStore: CounterStore) {}
 
   // カスタム属性名
   private CUSTOM_FIELDS = {
@@ -56,7 +72,8 @@ class BugCounter {
   public start() {
     this.getEngineerFixCompletedCount();
   }
-  getEngineerFixCompletedCount() {
+
+  async getEngineerFixCompletedCount() {
     const url_option = {
       apiKey: this.API_KEY,
       count: this.COUNT,
@@ -71,13 +88,13 @@ class BugCounter {
       `https://${this.SPACE_ID}.backlog.com/api/v2/issues` + option_params;
     console.log(api);
 
-    this.getJson(api);
+    const json = await this.getJson(api);
+    const mold_tickets = await this.mold(json);
+    await this.count(mold_tickets);
   }
 
   async getJson(api: string) {
-    const json = await fetch(api).then((res) => res.json());
-    const mold_tickets = this.mold(json);
-    this.count(mold_tickets);
+    return await fetch(api).then((res) => res.json());
   }
 
   mold(all_tickets: any) {
@@ -100,7 +117,40 @@ class BugCounter {
     return tickets;
   }
 
+  private jp_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
+    Web: 0,
+    iOS: 0,
+    Android: 0,
+  };
+  private offshore_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
+    Web: 0,
+    iOS: 0,
+    Android: 0,
+  };
+
   count(tickets: Tickets[]) {
+    for (const target of targets) {
+      this.jp_count_obj[target] = tickets.filter((n: Tickets): boolean => {
+        if (n.target === target && !n.engineer.includes("CRE")) {
+          return true;
+        }
+        return false;
+      }).length;
+      console.log(this.jp_count_obj);
+    }
+
+    for (const target of targets) {
+      this.offshore_count_obj[target] = tickets.filter(
+        (n: Tickets): boolean => {
+          if (n.target === target && n.engineer.includes("CRE")) {
+            return true;
+          }
+          return false;
+        }
+      ).length;
+      console.log(this.offshore_count_obj);
+    }
+
     const web_jp_count = tickets.filter((n: Tickets): boolean => {
       if (n.target === this.TARGET.WEB && !n.engineer.includes("CRE")) {
         return true;
@@ -189,7 +239,7 @@ class BugCounter {
     }
   }
 
-  makeQueryString(param: any) {
+  private makeQueryString(param: any) {
     //TODO anyをしゅうせい
     let query_string = "";
     for (const p in param) {
@@ -202,6 +252,24 @@ class BugCounter {
   }
 }
 
+// abstract class Counter {
+//   abstract setting(): Promise<void>;
+//   abstract mold(): Promise<void>;
+//   abstract count(): Promise<void>;
+//   abstract output(): Promise<void>;
+// }
+
+// class EngineerFixed {
+//   //
+// }
+// class OffshoreFixed {
+//   //
+// }
+
 (async () => {
   new BugCounter().start();
+  // {
+  // enginnerFixed: new EngineerFixed(),
+  // offshoreFixed: new OffshoreFixed(),
+  // }
 })();
