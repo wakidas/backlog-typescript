@@ -18,16 +18,20 @@ const targets = ["Web", "iOS", "Android"] as const;
 type TargetObj = { [key in "Web" | "iOS" | "Android"]: number };
 
 class BugCounter {
-  private SPACE_ID = process.env.SPACE_ID;
-  private API_KEY = process.env.API_KEY;
-  private PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
-  private SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
-  private COUNT = 100;
+  public start() {
+    new EngineerFixed().start();
+  }
+}
 
-  // constructor(private readonly gameStore: CounterStore) {}
+class Counter {
+  protected SPACE_ID = process.env.SPACE_ID;
+  protected API_KEY = process.env.API_KEY;
+  protected PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
+  protected SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
+  protected COUNT = 100;
 
   // カスタム属性名
-  private CUSTOM_FIELDS = {
+  protected CUSTOM_FIELDS = {
     OFFSHORE_FIN_DATE: {
       //オフショア修正完了日
       ID: 120512,
@@ -43,45 +47,58 @@ class BugCounter {
       ID: 38686,
       NAME: "ターゲット",
     },
+    ENGINEER: {
+      //エンジニア
+      ID: 95175,
+      NAME: "エンジニア",
+    },
   };
 
   // ターゲット value
-  private TARGET = {
+  protected TARGET = {
     WEB: "Web",
     IOS: "iOS",
     ANDROID: "Android",
   };
 
-  private COMMON_VALUES = {
+  protected COMMON_VALUES = {
     EMPTY: "未設定",
     OFFSHORE_EMPTY: "オフショア（対応前 offshore）",
   };
-
   // =====================================================================================
   // 基準日付を設定して実行
-  private START_DATE = "2022-01-01";
+  protected START_DATE = "2022-01-01";
   // =====================================================================================
 
-  public start() {
-    this.getEngineerFixCompletedCount();
+  protected makeQueryString(param: any) {
+    //TODO anyをしゅうせい
+    let query_string = "";
+    for (const p in param) {
+      let joint = query_string ? "&" : "";
+      query_string +=
+        joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
+    }
+
+    return "?" + query_string;
   }
+}
 
-  async getEngineerFixCompletedCount() {
-    const url_option = {
-      apiKey: this.API_KEY,
-      count: this.COUNT,
-      [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
-        this.START_DATE,
-      "projectId[]": this.PROJECT_ID,
-      "issueTypeId[]": this.SYSTEM_TROUBLE_ID,
-    };
-    const option_params = this.makeQueryString(url_option);
+class EngineerFixed extends Counter {
+  private url_option = {
+    apiKey: this.API_KEY,
+    count: this.COUNT,
+    [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
+      this.START_DATE,
+    "projectId[]": this.PROJECT_ID,
+    "issueTypeId[]": this.SYSTEM_TROUBLE_ID,
+  };
+  private option_params = this.makeQueryString(this.url_option);
 
-    const api =
-      `https://${this.SPACE_ID}.backlog.com/api/v2/issues` + option_params;
-    console.log(api);
+  private api =
+    `https://${this.SPACE_ID}.backlog.com/api/v2/issues` + this.option_params;
 
-    const json = await this.getJson(api);
+  public async start() {
+    const json = await this.getJson(this.api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
     await this.output();
@@ -98,10 +115,10 @@ class BugCounter {
 
     for (let item of all_tickets) {
       for (let customField of item.customFields) {
-        if (customField.id === 38686.0) {
+        if (customField.id === this.CUSTOM_FIELDS.TARGET.ID) {
           // ターゲット
           target = customField.value ? customField.value.name : "未設定";
-        } else if (customField.id === 95175.0) {
+        } else if (customField.id === this.CUSTOM_FIELDS.ENGINEER.ID) {
           // エンジニア
           engineer = customField.value ? customField.value.name : "未設定";
         }
@@ -111,7 +128,7 @@ class BugCounter {
     return tickets;
   }
 
-  private jp_count_obj: TargetObj = {
+  protected jp_count_obj: TargetObj = {
     Web: 0,
     iOS: 0,
     Android: 0,
@@ -200,20 +217,7 @@ class BugCounter {
       );
     }
   }
-
-  protected makeQueryString(param: any) {
-    //TODO anyをしゅうせい
-    let query_string = "";
-    for (const p in param) {
-      let joint = query_string ? "&" : "";
-      query_string +=
-        joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
-    }
-
-    return "?" + query_string;
-  }
 }
-
 // abstract class Counter {
 //   abstract setting(): Promise<void>;
 //   abstract mold(): Promise<void>;
