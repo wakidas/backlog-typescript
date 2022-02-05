@@ -56,9 +56,7 @@ function getEngineerFixCompletedCount() {
   };
   const option_params = makeQueryString(url_option);
 
-  // const api = `https://${SPACE_ID}.backlog.com/api/v2/issues` + option_params;
-  const api =
-    "https://p10n.backlog.com/api/v2/issues?apiKey=Rb80JH5OOJj5bPNNUre6dH8EP2MpTxvXLEzSJGW14GSJ2f2dtv4CxdtHs5HBKdYN&count=100&customField_105982_min=2021-11-01&projectId[]=89385&issueTypeId[]=424334";
+  const api = `https://${SPACE_ID}.backlog.com/api/v2/issues` + option_params;
   console.log(api);
 
   getJson(api);
