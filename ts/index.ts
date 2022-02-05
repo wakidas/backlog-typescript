@@ -1,4 +1,8 @@
+import "dotenv/config";
+console.log(process.env.API_KEY);
+
 import fetch from "node-fetch";
+
 type Tickets = {
   target: string;
   engineer: string;
@@ -7,11 +11,10 @@ type Tickets = {
 type Target = "Web" | "iOS" | "Android";
 
 class BugCounter {
-  private SPACE_ID = "p10n";
-  private API_KEY =
-    "Rb80JH5OOJj5bPNNUre6dH8EP2MpTxvXLEzSJGW14GSJ2f2dtv4CxdtHs5HBKdYN";
-  private PROJECT_ID = 89385; // プロジェクト『バグ管理(BUGS)』
-  private SYSTEM_TROUBLE_ID = 424334; // 種別『システムトラブル 』
+  private SPACE_ID = process.env.SPACE_ID;
+  private API_KEY = process.env.API_KEY;
+  private PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
+  private SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
   private COUNT = 100;
 
   // カスタム属性名
