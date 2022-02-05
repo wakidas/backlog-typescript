@@ -84,14 +84,20 @@ class Counter {
 }
 
 class EngineerFixed extends Counter {
-  private url_option = {
+  private base_option = {
     apiKey: this.API_KEY,
     count: this.COUNT,
-    [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
-      this.START_DATE,
     "projectId[]": this.PROJECT_ID,
     "issueTypeId[]": this.SYSTEM_TROUBLE_ID,
   };
+
+  private additional_option = {
+    [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
+      this.START_DATE,
+  };
+
+  private url_option = { ...this.base_option, ...this.additional_option };
+
   private option_params = this.makeQueryString(this.url_option);
 
   private api =
@@ -128,7 +134,7 @@ class EngineerFixed extends Counter {
     return tickets;
   }
 
-  protected jp_count_obj: TargetObj = {
+  private jp_count_obj: TargetObj = {
     Web: 0,
     iOS: 0,
     Android: 0,
