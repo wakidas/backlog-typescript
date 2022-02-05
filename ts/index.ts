@@ -1,18 +1,10 @@
 import "dotenv/config";
-console.log(process.env.API_KEY);
-
 import fetch from "node-fetch";
 
 type Tickets = {
   target: string;
   engineer: string;
 };
-
-interface Target {
-  Web: string;
-  iOS: string;
-  Android: string;
-}
 
 const targets = ["Web", "iOS", "Android"] as const;
 type TargetObj = { [key in "Web" | "iOS" | "Android"]: number };
@@ -30,26 +22,38 @@ class Counter {
   protected SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
   protected COUNT = 100;
 
+  protected base_option = {
+    apiKey: this.API_KEY,
+    count: this.COUNT,
+    "projectId[]": this.PROJECT_ID,
+    "issueTypeId[]": this.SYSTEM_TROUBLE_ID,
+  };
+
+  private OFFSHORE_FIN_DATE_ID: string = process.env.OFFSHORE_FIN_DATE_ID || "";
+  private ENGINEER_FIN_DATE_ID: string = process.env.ENGINEER_FIN_DATE_ID || "";
+  private TARGET_ID: string = process.env.TARGET_ID || "";
+  private ENGINEER_ID: string = process.env.ENGINEER_ID || "";
+
   // カスタム属性名
   protected CUSTOM_FIELDS = {
     OFFSHORE_FIN_DATE: {
       //オフショア修正完了日
-      ID: 120512,
+      ID: parseInt(this.OFFSHORE_FIN_DATE_ID),
       NAME: "オフショア修正完了日",
     },
     ENGINEER_FIN_DATE: {
       //エンジニア対応完了日
-      ID: 105982,
+      ID: parseInt(this.ENGINEER_FIN_DATE_ID),
       NAME: "エンジニア対応完了日",
     },
     TARGET: {
       //ターゲット
-      ID: 38686,
+      ID: parseInt(this.TARGET_ID),
       NAME: "ターゲット",
     },
     ENGINEER: {
       //エンジニア
-      ID: 95175,
+      ID: parseInt(this.ENGINEER_ID),
       NAME: "エンジニア",
     },
   };
@@ -81,15 +85,27 @@ class Counter {
 
     return "?" + query_string;
   }
+
+  protected async getJson(api: string) {
+    return await fetch(api).then((res) => res.json());
+  }
 }
 
 class EngineerFixed extends Counter {
-  private base_option = {
-    apiKey: this.API_KEY,
-    count: this.COUNT,
-    "projectId[]": this.PROJECT_ID,
-    "issueTypeId[]": this.SYSTEM_TROUBLE_ID,
+  private jp_count_obj: TargetObj = {
+    Web: 0,
+    iOS: 0,
+    Android: 0,
   };
+  private offshore_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
+    Web: 0,
+    iOS: 0,
+    Android: 0,
+  };
+  private jp_total_count: number = 0;
+  private offshore_total_count: number = 0;
+  private target_empty_count: number = 0;
+  private engineer_empty_count: number = 0;
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
@@ -110,11 +126,7 @@ class EngineerFixed extends Counter {
     await this.output();
   }
 
-  async getJson(api: string) {
-    return await fetch(api).then((res) => res.json());
-  }
-
-  mold(all_tickets: any) {
+  private mold(all_tickets: any) {
     let tickets = [];
     let target;
     let engineer;
@@ -134,22 +146,7 @@ class EngineerFixed extends Counter {
     return tickets;
   }
 
-  private jp_count_obj: TargetObj = {
-    Web: 0,
-    iOS: 0,
-    Android: 0,
-  };
-  private offshore_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
-    Web: 0,
-    iOS: 0,
-    Android: 0,
-  };
-  private jp_total_count: number = 0;
-  private offshore_total_count: number = 0;
-  private target_empty_count: number = 0;
-  private engineer_empty_count: number = 0;
-
-  count(tickets: Tickets[]) {
+  private count(tickets: Tickets[]) {
     for (const target of targets) {
       this.jp_count_obj[target] = tickets.filter((n: Tickets): boolean => {
         if (n.target === target && !n.engineer.includes("CRE")) {
@@ -192,7 +189,7 @@ class EngineerFixed extends Counter {
     }).length;
   }
 
-  output() {
+  private output() {
     const output = {
       total: this.jp_total_count + this.offshore_total_count,
       japan: {
