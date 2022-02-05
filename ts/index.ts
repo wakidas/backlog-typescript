@@ -154,27 +154,9 @@ class BugCounter {
       (accumulator: number, current: number) => accumulator + current
     );
 
-    const web_offshore_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.WEB && n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-    const ios_offshore_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.IOS && n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-    const android_offshore_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.ANDROID && n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-
-    const offshore_total_count =
-      web_offshore_count + ios_offshore_count + android_offshore_count;
+    const offshore_total_count = Object.values(this.offshore_count_obj).reduce(
+      (accumulator: number, current: number) => accumulator + current
+    );
 
     const target_empty_count = tickets.filter((n: Tickets): boolean => {
       if (n.target === "未設定") {
