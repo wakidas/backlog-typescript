@@ -12,7 +12,7 @@ type CountTarget = {
   Android: number;
 };
 
-type CountTickets = {
+type CountEmpry = {
   target: number;
   engineer: number;
 };
@@ -112,7 +112,7 @@ class EngineerFixed extends Counter {
   };
   private jp_total_count: number = 0;
   private offshore_total_count: number = 0;
-  private empty_count: CountTickets = {
+  private empty_count: CountEmpry = {
     target: 0,
     engineer: 0,
   };
