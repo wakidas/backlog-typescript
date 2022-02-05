@@ -121,11 +121,9 @@ class EngineerFixed extends Counter {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
       this.START_DATE,
   };
-
   private url_option = { ...this.base_option, ...this.additional_option };
 
   private api_params = this.makeQueryString(this.url_option);
-
   private api = `https://${this.SPACE_ID}.backlog.com/api/v2/issues${this.api_params}`;
 
   public async start() {
@@ -229,24 +227,7 @@ class EngineerFixed extends Counter {
     }
   }
 }
-// abstract class Counter {
-//   abstract setting(): Promise<void>;
-//   abstract mold(): Promise<void>;
-//   abstract count(): Promise<void>;
-//   abstract output(): Promise<void>;
-// }
-
-// class EngineerFixed {
-//   //
-// }
-// class OffshoreFixed {
-//   //
-// }
 
 (async () => {
   new BugCounter().start();
-  // {
-  // enginnerFixed: new EngineerFixed(),
-  // offshoreFixed: new OffshoreFixed(),
-  // }
 })();
