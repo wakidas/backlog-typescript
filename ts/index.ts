@@ -230,6 +230,14 @@ class EngineerFixed extends Counter {
 }
 
 class OffshoreFixed extends Counter {
+  private offshore_count: CountTarget = {
+    Web: 0,
+    iOS: 0,
+    Android: 0,
+  };
+  private total_count: number = 0;
+  private engineer_empty_count: number = 0;
+
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_min`]:
       this.START_DATE,
@@ -243,7 +251,7 @@ class OffshoreFixed extends Counter {
     const json = await this.getJson(this.api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
-    // await this.output();
+    await this.output();
   }
 
   private mold(all_tickets: any) {
@@ -252,7 +260,7 @@ class OffshoreFixed extends Counter {
 
     for (let item of all_tickets) {
       for (let customField of item.customFields) {
-        if (customField.id === 38686.0) {
+        if (customField.id === this.CUSTOM_FIELDS.TARGET.ID) {
           // ターゲット
           target = customField.value ? customField.value.name : "未設定";
 
@@ -264,40 +272,36 @@ class OffshoreFixed extends Counter {
   }
 
   private count(tickets: Tickets[]) {
-    const web_count = tickets.filter((n) => {
-      if (n.target === this.TARGET.WEB) {
-        return true;
-      }
-      return false;
-    }).length;
-    const ios_count = tickets.filter((n) => {
-      if (n.target === this.TARGET.IOS) {
-        return true;
-      }
-      return false;
-    }).length;
-    const android_count = tickets.filter((n) => {
-      if (n.target === this.TARGET.ANDROID) {
-        return true;
-      }
-      return false;
-    }).length;
+    const targets = ["Web", "iOS", "Android"] as const;
 
-    const total_count = web_count + ios_count + android_count;
+    for (const target of targets) {
+      this.offshore_count[target] = tickets.filter((n) => {
+        if (n.target === target) {
+          return true;
+        }
+        return false;
+      }).length;
+    }
 
-    const engineer_empty_count = tickets.filter((n) => {
+    this.total_count = Object.values(this.offshore_count).reduce(
+      (accumulator: number, current: number) => accumulator + current
+    );
+
+    this.engineer_empty_count = tickets.filter((n) => {
       if (n.engineer === "オフショア（対応前 offshore）") {
         return true;
       }
       return false;
     }).length;
+  }
 
+  private output() {
     const output = {
-      合計: total_count,
-      [this.TARGET.WEB]: web_count,
-      [this.TARGET.IOS]: ios_count,
-      [this.TARGET.ANDROID]: android_count,
-      engineer_empry: engineer_empty_count,
+      合計: this.total_count,
+      [this.TARGET.WEB]: this.offshore_count.Web,
+      [this.TARGET.IOS]: this.offshore_count.iOS,
+      [this.TARGET.ANDROID]: this.offshore_count.Android,
+      engineer_empry: this.engineer_empty_count,
     };
     console.log(
       `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （${this.START_DATE} 以降）」」」」`
@@ -306,7 +310,7 @@ class OffshoreFixed extends Counter {
 
     if (output.engineer_empry) {
       console.error(
-        `『${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME}』に未設定があります。エンジニア${engineer_empty_count}件`
+        `『${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME}』に未設定があります。エンジニア${this.engineer_empty_count}件`
       );
     }
   }
