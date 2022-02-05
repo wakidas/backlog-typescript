@@ -114,10 +114,10 @@ class EngineerFixed extends Counter {
 
   private url_option = { ...this.base_option, ...this.additional_option };
 
-  private option_params = this.makeQueryString(this.url_option);
+  private api_params = this.makeQueryString(this.url_option);
 
   private api =
-    `https://${this.SPACE_ID}.backlog.com/api/v2/issues` + this.option_params;
+    `https://${this.SPACE_ID}.backlog.com/api/v2/issues` + this.api_params;
 
   public async start() {
     const json = await this.getJson(this.api);
