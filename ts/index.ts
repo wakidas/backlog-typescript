@@ -15,15 +15,7 @@ interface Target {
 }
 
 const targets = ["Web", "iOS", "Android"] as const;
-// type TargetKey = typeof targets[number];
 type TargetObj = { [key in "Web" | "iOS" | "Android"]: number };
-type TargetKey = keyof Target;
-// type CounterStore = {
-//   [key in CounterType]: Counter;
-// };
-
-const counterTypes = ["enginnerFixed", "offshoreFixed"] as const;
-type CounterType = typeof counterTypes[number];
 
 class BugCounter {
   private SPACE_ID = process.env.SPACE_ID;
@@ -92,6 +84,7 @@ class BugCounter {
     const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
+    await this.output();
   }
 
   async getJson(api: string) {
@@ -128,6 +121,10 @@ class BugCounter {
     iOS: 0,
     Android: 0,
   };
+  private jp_total_count: number = 0;
+  private offshore_total_count: number = 0;
+  private target_empty_count: number = 0;
+  private engineer_empty_count: number = 0;
 
   count(tickets: Tickets[]) {
     for (const target of targets) {
@@ -150,44 +147,46 @@ class BugCounter {
       ).length;
     }
 
-    const jp_total_count = Object.values(this.jp_count_obj).reduce(
+    this.jp_total_count = Object.values(this.jp_count_obj).reduce(
       (accumulator: number, current: number) => accumulator + current
     );
 
-    const offshore_total_count = Object.values(this.offshore_count_obj).reduce(
+    this.offshore_total_count = Object.values(this.offshore_count_obj).reduce(
       (accumulator: number, current: number) => accumulator + current
     );
 
-    const target_empty_count = tickets.filter((n: Tickets): boolean => {
+    this.target_empty_count = tickets.filter((n: Tickets): boolean => {
       if (n.target === "未設定") {
         return true;
       }
       return false;
     }).length;
-    const engineer_empty_count = tickets.filter((n: Tickets): boolean => {
+    this.engineer_empty_count = tickets.filter((n: Tickets): boolean => {
       if (n.engineer === "未設定") {
         return true;
       }
       return false;
     }).length;
+  }
 
+  output() {
     const output = {
-      total: jp_total_count + offshore_total_count,
+      total: this.jp_total_count + this.offshore_total_count,
       japan: {
-        日本合計: jp_total_count,
+        日本合計: this.jp_total_count,
         [this.TARGET.WEB]: this.jp_count_obj.Web,
         [this.TARGET.IOS]: this.jp_count_obj.iOS,
         [this.TARGET.ANDROID]: this.jp_count_obj.Android,
       },
       offshore: {
-        オフショア合計: offshore_total_count,
+        オフショア合計: this.offshore_total_count,
         [this.TARGET.WEB]: this.offshore_count_obj.Web,
         [this.TARGET.IOS]: this.offshore_count_obj.iOS,
         [this.TARGET.ANDROID]: this.offshore_count_obj.Android,
       },
       empty: {
-        target: target_empty_count,
-        engineer: engineer_empty_count,
+        target: this.target_empty_count,
+        engineer: this.engineer_empty_count,
       },
     };
     console.log(
@@ -197,12 +196,12 @@ class BugCounter {
 
     if (output.empty.target || output.empty.engineer) {
       console.error(
-        `『${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}』に未設定があります。ターゲット：${target_empty_count}件、エンジニア${engineer_empty_count}件`
+        `『${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}』に未設定があります。ターゲット：${this.target_empty_count}件、エンジニア${this.engineer_empty_count}件`
       );
     }
   }
 
-  private makeQueryString(param: any) {
+  protected makeQueryString(param: any) {
     //TODO anyをしゅうせい
     let query_string = "";
     for (const p in param) {
