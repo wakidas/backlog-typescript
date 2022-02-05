@@ -16,6 +16,7 @@ interface Target {
 
 const targets = ["Web", "iOS", "Android"] as const;
 // type TargetKey = typeof targets[number];
+type TargetObj = { [key in "Web" | "iOS" | "Android"]: number };
 type TargetKey = keyof Target;
 // type CounterStore = {
 //   [key in CounterType]: Counter;
@@ -117,7 +118,7 @@ class BugCounter {
     return tickets;
   }
 
-  private jp_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
+  private jp_count_obj: TargetObj = {
     Web: 0,
     iOS: 0,
     Android: 0,
@@ -136,7 +137,6 @@ class BugCounter {
         }
         return false;
       }).length;
-      console.log(this.jp_count_obj);
     }
 
     for (const target of targets) {
@@ -148,30 +148,11 @@ class BugCounter {
           return false;
         }
       ).length;
-      console.log(this.offshore_count_obj);
     }
 
-    const web_jp_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.WEB && !n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-
-    const ios_jp_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.IOS && !n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-    const android_jp_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === this.TARGET.ANDROID && !n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
-    }).length;
-
-    const jp_total_count = web_jp_count + ios_jp_count + android_jp_count;
+    const jp_total_count = Object.values(this.jp_count_obj).reduce(
+      (accumulator: number, current: number) => accumulator + current
+    );
 
     const web_offshore_count = tickets.filter((n: Tickets): boolean => {
       if (n.target === this.TARGET.WEB && n.engineer.includes("CRE")) {
@@ -212,15 +193,15 @@ class BugCounter {
       total: jp_total_count + offshore_total_count,
       japan: {
         日本合計: jp_total_count,
-        [this.TARGET.WEB]: web_jp_count,
-        [this.TARGET.IOS]: ios_jp_count,
-        [this.TARGET.ANDROID]: android_jp_count,
+        [this.TARGET.WEB]: this.jp_count_obj.Web,
+        [this.TARGET.IOS]: this.jp_count_obj.iOS,
+        [this.TARGET.ANDROID]: this.jp_count_obj.Android,
       },
       offshore: {
         オフショア合計: offshore_total_count,
-        [this.TARGET.WEB]: web_offshore_count,
-        [this.TARGET.IOS]: ios_offshore_count,
-        [this.TARGET.ANDROID]: android_offshore_count,
+        [this.TARGET.WEB]: this.offshore_count_obj.Web,
+        [this.TARGET.IOS]: this.offshore_count_obj.iOS,
+        [this.TARGET.ANDROID]: this.offshore_count_obj.Android,
       },
       empty: {
         target: target_empty_count,
