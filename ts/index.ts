@@ -45,7 +45,6 @@ const COMMON_VALUES = {
 const START_DATE = "2022-01-01";
 // =====================================================================================
 
-let all_tickets;
 function getEngineerFixCompletedCount() {
   const url_option = {
     apiKey: API_KEY,
@@ -64,10 +63,11 @@ function getEngineerFixCompletedCount() {
 
 async function getJson(api: string) {
   const json = await fetch(api).then((res) => res.json());
-  count(json);
+  const mold_tickets = mold(json);
+  count(mold_tickets);
 }
 
-function count(all_tickets: any) {
+function mold(all_tickets: any) {
   let tickets = [];
   let target;
   let engineer;
@@ -84,16 +84,23 @@ function count(all_tickets: any) {
     }
     tickets.push({ target: target, engineer: engineer });
   }
-  // console.log(tickets);
+  return tickets;
+}
 
-  const web_jp_count = tickets.filter(
-    (n: { target: any; engineer: any }): boolean => {
-      if (n.target === TARGET.WEB && !n.engineer.includes("CRE")) {
-        return true;
-      }
-      return false;
+type Tickets = {
+  target: string;
+  engineer: string;
+};
+
+type Target = "Web" | "iOS" | "Android";
+
+function count(tickets: Tickets[]) {
+  const web_jp_count = tickets.filter((n: Tickets): boolean => {
+    if (n.target === TARGET.WEB && !n.engineer.includes("CRE")) {
+      return true;
     }
-  ).length;
+    return false;
+  }).length;
 
   const ios_jp_count = tickets.filter(
     (n: { target: any; engineer: any }): boolean => {
