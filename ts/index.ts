@@ -6,8 +6,16 @@ type Tickets = {
   engineer: string;
 };
 
-const targets = ["Web", "iOS", "Android"] as const;
-type TargetObj = { [key in "Web" | "iOS" | "Android"]: number };
+type CountTarget = {
+  Web: number;
+  iOS: number;
+  Android: number;
+};
+
+type CountTickets = {
+  target: number;
+  engineer: number;
+};
 
 class BugCounter {
   public start() {
@@ -92,20 +100,22 @@ class Counter {
 }
 
 class EngineerFixed extends Counter {
-  private jp_count_obj: TargetObj = {
+  private jp_count_obj: CountTarget = {
     Web: 0,
     iOS: 0,
     Android: 0,
   };
-  private offshore_count_obj: { [key in "Web" | "iOS" | "Android"]: number } = {
+  private offshore_count_obj: CountTarget = {
     Web: 0,
     iOS: 0,
     Android: 0,
   };
   private jp_total_count: number = 0;
   private offshore_total_count: number = 0;
-  private target_empty_count: number = 0;
-  private engineer_empty_count: number = 0;
+  private empty_count: CountTickets = {
+    target: 0,
+    engineer: 0,
+  };
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
@@ -146,6 +156,9 @@ class EngineerFixed extends Counter {
   }
 
   private count(tickets: Tickets[]) {
+    const targets = ["Web", "iOS", "Android"] as const;
+    const customFields = ["target", "engineer"] as const;
+
     for (const target of targets) {
       this.jp_count_obj[target] = tickets.filter((n: Tickets): boolean => {
         if (n.target === target && !n.engineer.includes("CRE")) {
@@ -174,18 +187,14 @@ class EngineerFixed extends Counter {
       (accumulator: number, current: number) => accumulator + current
     );
 
-    this.target_empty_count = tickets.filter((n: Tickets): boolean => {
-      if (n.target === "未設定") {
-        return true;
-      }
-      return false;
-    }).length;
-    this.engineer_empty_count = tickets.filter((n: Tickets): boolean => {
-      if (n.engineer === "未設定") {
-        return true;
-      }
-      return false;
-    }).length;
+    for (const cf of customFields) {
+      this.empty_count[cf] = tickets.filter((n: Tickets): boolean => {
+        if (n.target === "未設定") {
+          return true;
+        }
+        return false;
+      }).length;
+    }
   }
 
   private output() {
@@ -204,8 +213,8 @@ class EngineerFixed extends Counter {
         [this.TARGET.ANDROID]: this.offshore_count_obj.Android,
       },
       empty: {
-        target: this.target_empty_count,
-        engineer: this.engineer_empty_count,
+        target: this.empty_count.target,
+        engineer: this.empty_count.engineer,
       },
     };
     console.log(
@@ -215,7 +224,7 @@ class EngineerFixed extends Counter {
 
     if (output.empty.target || output.empty.engineer) {
       console.error(
-        `『${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}』に未設定があります。ターゲット：${this.target_empty_count}件、エンジニア${this.engineer_empty_count}件`
+        `『${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}』に未設定があります。ターゲット：${this.empty_count.target}件、エンジニア${this.empty_count.engineer}件`
       );
     }
   }
