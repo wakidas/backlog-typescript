@@ -44,7 +44,6 @@ class BugCounter {
     const beginning_date = `${date.getFullYear()}-${
       date.getMonth() + 1
     }-${date.getDate()}`;
-    console.log({ beginning_date });
 
     return beginning_date;
   }
@@ -57,15 +56,11 @@ class BugCounter {
     const end_date = `${date.getFullYear()}-${
       date.getMonth() + 1
     }-${date.getDate()}`;
-    console.log({ end_date });
 
     return end_date;
   }
 
   public start() {
-    console.log("option_params " + this.option_params.start);
-    console.log("option_params " + this.option_params.end);
-
     new EngineerFixed(this.option_params).start();
     new OffshoreFixed(this.option_params).start();
   }
@@ -178,10 +173,6 @@ class EngineerFixed extends Counter {
   private url_option = { ...this.base_option, ...this.additional_option };
 
   public async start() {
-    console.log(process.argv);
-    console.log("start_date " + this.start_date);
-    console.log("end_date " + this.end_date);
-
     const api = await this.makeApiURI(this.url_option);
     const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
