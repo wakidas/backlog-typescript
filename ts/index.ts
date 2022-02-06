@@ -83,7 +83,7 @@ class Counter {
   protected START_DATE = "2022-01-01";
   // =====================================================================================
 
-  protected makeQueryString(param: any) {
+  protected makeApiURI(param: any) {
     //TODO anyをしゅうせい
     let query_string = "";
     for (const p in param) {
@@ -92,7 +92,9 @@ class Counter {
         joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
     }
 
-    return "?" + query_string;
+    // return "?" + query_string;
+
+    return `https://${this.SPACE_ID}.backlog.com/api/v2/issues?${query_string}`;
   }
 
   protected async getJson(api: string) {
@@ -124,11 +126,9 @@ class EngineerFixed extends Counter {
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
-  private api_params = this.makeQueryString(this.url_option);
-  private api = `https://${this.SPACE_ID}.backlog.com/api/v2/issues${this.api_params}`;
-
   public async start() {
-    const json = await this.getJson(this.api);
+    const api = await this.makeApiURI(this.url_option);
+    const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
     await this.output();
@@ -244,11 +244,9 @@ class OffshoreFixed extends Counter {
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
-  private api_params = this.makeQueryString(this.url_option);
-  private api = `https://${this.SPACE_ID}.backlog.com/api/v2/issues${this.api_params}`;
-
   public async start() {
-    const json = await this.getJson(this.api);
+    const api = await this.makeApiURI(this.url_option);
+    const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
     await this.output();
