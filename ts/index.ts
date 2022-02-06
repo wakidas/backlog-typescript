@@ -74,9 +74,9 @@ class Counter {
     ANDROID: "Android",
   };
 
-  protected COMMON_VALUES = {
+  protected COMMON_CONSTANTS = {
     EMPTY: "未設定",
-    OFFSHORE_EMPTY: "オフショア（対応前 offshore）",
+    OFFSHORE_EMPTY: "オフショアCRE（対応前 offshore）",
   };
   // =====================================================================================
   // 基準日付を設定して実行
@@ -91,8 +91,6 @@ class Counter {
       query_string +=
         joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
     }
-
-    // return "?" + query_string;
 
     return `https://${this.SPACE_ID}.backlog.com/api/v2/issues?${query_string}`;
   }
@@ -143,10 +141,14 @@ class EngineerFixed extends Counter {
       for (let customField of item.customFields) {
         if (customField.id === this.CUSTOM_FIELDS.TARGET.ID) {
           // ターゲット
-          target = customField.value ? customField.value.name : "未設定";
+          target = customField.value
+            ? customField.value.name
+            : this.COMMON_CONSTANTS.EMPTY;
         } else if (customField.id === this.CUSTOM_FIELDS.ENGINEER.ID) {
           // エンジニア
-          engineer = customField.value ? customField.value.name : "未設定";
+          engineer = customField.value
+            ? customField.value.name
+            : this.COMMON_CONSTANTS.EMPTY;
         }
       }
       tickets.push({ target: target, engineer: engineer });
@@ -188,7 +190,7 @@ class EngineerFixed extends Counter {
 
     for (const cf of customFields) {
       this.empty_count[cf] = tickets.filter((n: Tickets): boolean => {
-        if (n.target === "未設定") {
+        if (n.target === this.COMMON_CONSTANTS.EMPTY) {
           return true;
         }
         return false;
@@ -260,7 +262,9 @@ class OffshoreFixed extends Counter {
       for (let customField of item.customFields) {
         if (customField.id === this.CUSTOM_FIELDS.TARGET.ID) {
           // ターゲット
-          target = customField.value ? customField.value.name : "未設定";
+          target = customField.value
+            ? customField.value.name
+            : this.COMMON_CONSTANTS.EMPTY;
 
           tickets.push({ target: target });
         }
@@ -286,7 +290,7 @@ class OffshoreFixed extends Counter {
     );
 
     this.engineer_empty_count = tickets.filter((n) => {
-      if (n.engineer === "オフショア（対応前 offshore）") {
+      if (n.engineer === this.COMMON_CONSTANTS.OFFSHORE_EMPTY) {
         return true;
       }
       return false;
