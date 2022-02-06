@@ -30,7 +30,7 @@ class BugCounter {
   constructor(date: { start?: string; end?: string }) {
     this.start_date = date.start || this.setInitialStartDate();
     this.end_date = date.end || this.setInitialEndDate(this.start_date);
-    this.option_params = {
+    this.params = {
       start: this.start_date,
       end: this.end_date,
     };
@@ -38,7 +38,7 @@ class BugCounter {
 
   protected start_date: string = "";
   protected end_date: string = "";
-  protected option_params: {
+  protected params: {
     start: string;
     end: string;
   } = {
@@ -70,8 +70,8 @@ class BugCounter {
   }
 
   public start() {
-    new EngineerFixed(this.option_params).start();
-    new OffshoreFixed(this.option_params).start();
+    new EngineerFixed(this.params).start();
+    new OffshoreFixed(this.params).start();
   }
 }
 
