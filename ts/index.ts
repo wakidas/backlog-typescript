@@ -18,13 +18,68 @@ type CountEmpry = {
 };
 
 class BugCounter {
+  constructor(date: { start?: string; end?: string }) {
+    this.start_date = date.start || this.setInitialStartDate();
+    this.end_date = date.end || this.setInitialEndDate(this.start_date);
+    this.option_params = {
+      start: this.start_date,
+      end: this.end_date,
+    };
+  }
+
+  protected start_date: string = "";
+  protected end_date: string = "";
+  protected option_params: {
+    start: string;
+    end: string;
+  } = {
+    start: "",
+    end: "",
+  };
+
+  private setInitialStartDate() {
+    const date = new Date();
+    date.setDate(1);
+
+    const beginning_date = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    console.log({ beginning_date });
+
+    return beginning_date;
+  }
+
+  private setInitialEndDate(start_date: string) {
+    const date = new Date(start_date);
+    date.setMonth(date.getMonth() + 1);
+    date.setDate(0);
+
+    const end_date = `${date.getFullYear()}-${
+      date.getMonth() + 1
+    }-${date.getDate()}`;
+    console.log({ end_date });
+
+    return end_date;
+  }
+
   public start() {
-    new EngineerFixed().start();
-    new OffshoreFixed().start();
+    console.log("option_params " + this.option_params.start);
+    console.log("option_params " + this.option_params.end);
+
+    new EngineerFixed(this.option_params).start();
+    new OffshoreFixed(this.option_params).start();
   }
 }
 
 class Counter {
+  constructor(date: { start: string; end: string }) {
+    this.start_date = date.start;
+    this.end_date = date.end;
+  }
+
+  protected start_date: string = "";
+  protected end_date: string = "";
+
   protected SPACE_ID = process.env.SPACE_ID;
   protected API_KEY = process.env.API_KEY;
   protected PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
@@ -78,11 +133,6 @@ class Counter {
     EMPTY: "未設定",
     OFFSHORE_EMPTY: "オフショアCRE（対応前 offshore）",
   };
-  // =====================================================================================
-  // 基準日付を設定して実行
-  protected START_DATE = "2022-01-01";
-  protected END_DATE = "2022-01-31";
-  // =====================================================================================
 
   protected makeApiURI(param: any) {
     //TODO anyをしゅうせい
@@ -121,13 +171,17 @@ class EngineerFixed extends Counter {
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
-      this.START_DATE,
+      this.start_date,
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_max`]:
-      this.END_DATE,
+      this.end_date,
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
   public async start() {
+    console.log(process.argv);
+    console.log("start_date " + this.start_date);
+    console.log("end_date " + this.end_date);
+
     const api = await this.makeApiURI(this.url_option);
     const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
@@ -222,7 +276,7 @@ class EngineerFixed extends Counter {
       },
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（${this.START_DATE} 以降） 」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（${this.start_date} 以降） 」」」」`
     );
     console.log(output);
 
@@ -245,9 +299,9 @@ class OffshoreFixed extends Counter {
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_min`]:
-      this.START_DATE,
+      this.start_date,
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_max`]:
-      this.END_DATE,
+      this.end_date,
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
@@ -311,7 +365,7 @@ class OffshoreFixed extends Counter {
       engineer_empry: this.engineer_empty_count,
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （${this.START_DATE} 以降）」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （${this.start_date} 以降）」」」」`
     );
     console.log(output);
 
@@ -324,5 +378,8 @@ class OffshoreFixed extends Counter {
 }
 
 (async () => {
-  new BugCounter().start();
+  new BugCounter({
+    start: process.argv[2],
+    end: process.argv[3],
+  }).start();
 })();
