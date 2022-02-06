@@ -17,6 +17,15 @@ type CountEmpry = {
   engineer: number;
 };
 
+type BaseUriOption = {
+  apiKey: string;
+  count: number;
+  "projectId[]": string;
+  "issueTypeId[]": string;
+};
+
+type UriOption = { [key: string]: string | number };
+
 class BugCounter {
   constructor(date: { start?: string; end?: string }) {
     this.start_date = date.start || this.setInitialStartDate();
@@ -75,13 +84,13 @@ class Counter {
   protected start_date: string = "";
   protected end_date: string = "";
 
-  protected SPACE_ID = process.env.SPACE_ID;
-  protected API_KEY = process.env.API_KEY;
-  protected PROJECT_ID = process.env.PROJECT_ID; // プロジェクト『バグ管理(BUGS)』
-  protected SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID; // 種別『システムトラブル 』
+  protected SPACE_ID = process.env.SPACE_ID || "";
+  protected API_KEY = process.env.API_KEY || "";
+  protected PROJECT_ID = process.env.PROJECT_ID || ""; // プロジェクト『バグ管理(BUGS)』
+  protected SYSTEM_TROUBLE_ID = process.env.SYSTEM_TROUBLE_ID || ""; // 種別『システムトラブル 』
   protected COUNT = 100;
 
-  protected base_option = {
+  protected base_option: BaseUriOption = {
     apiKey: this.API_KEY,
     count: this.COUNT,
     "projectId[]": this.PROJECT_ID,
@@ -129,13 +138,15 @@ class Counter {
     OFFSHORE_EMPTY: "オフショアCRE（対応前 offshore）",
   };
 
-  protected makeApiURI(param: any) {
-    //TODO anyをしゅうせい
+  protected makeApiURI(params: UriOption): string {
     let query_string = "";
-    for (const p in param) {
+    for (const param in params) {
       const joint = query_string ? "&" : "";
       query_string +=
-        joint + encodeURIComponent(p) + "=" + encodeURIComponent(param[p]);
+        joint +
+        encodeURIComponent(param) +
+        "=" +
+        encodeURIComponent(params[param]);
     }
 
     return `https://${this.SPACE_ID}.backlog.com/api/v2/issues?${query_string}`;
@@ -170,10 +181,13 @@ class EngineerFixed extends Counter {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_max`]:
       this.end_date,
   };
-  private url_option = { ...this.base_option, ...this.additional_option };
+  private uri_option: UriOption = {
+    ...this.base_option,
+    ...this.additional_option,
+  };
 
   public async start() {
-    const api = await this.makeApiURI(this.url_option);
+    const api = await this.makeApiURI(this.uri_option);
     const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
@@ -294,10 +308,10 @@ class OffshoreFixed extends Counter {
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_max`]:
       this.end_date,
   };
-  private url_option = { ...this.base_option, ...this.additional_option };
+  private uri_option = { ...this.base_option, ...this.additional_option };
 
   public async start() {
-    const api = await this.makeApiURI(this.url_option);
+    const api = await this.makeApiURI(this.uri_option);
     const json = await this.getJson(api);
     const mold_tickets = await this.mold(json);
     await this.count(mold_tickets);
