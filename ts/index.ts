@@ -81,6 +81,7 @@ class Counter {
   // =====================================================================================
   // 基準日付を設定して実行
   protected START_DATE = "2022-01-01";
+  protected END_DATE = "2022-01-31";
   // =====================================================================================
 
   protected makeApiURI(param: any) {
@@ -121,6 +122,8 @@ class EngineerFixed extends Counter {
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
       this.START_DATE,
+    [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_max`]:
+      this.END_DATE,
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
@@ -243,6 +246,8 @@ class OffshoreFixed extends Counter {
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_min`]:
       this.START_DATE,
+    [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_max`]:
+      this.END_DATE,
   };
   private url_option = { ...this.base_option, ...this.additional_option };
 
