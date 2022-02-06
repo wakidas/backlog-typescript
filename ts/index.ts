@@ -28,6 +28,7 @@ type UriOption = { [key: string]: string | number };
 
 class BugCounter {
   constructor(date: { start?: string; end?: string }) {
+    // 引数なしで実行した場合、当月1日〜当月末を期間とする
     this.start_date = date.start || this.setInitialStartDate();
     this.end_date = date.end || this.setInitialEndDate(this.start_date);
     this.params = {
@@ -36,9 +37,9 @@ class BugCounter {
     };
   }
 
-  protected start_date: string = "";
-  protected end_date: string = "";
-  protected params: {
+  private start_date: string = "";
+  private end_date: string = "";
+  private params: {
     start: string;
     end: string;
   } = {
@@ -50,10 +51,7 @@ class BugCounter {
     const date = new Date();
     date.setDate(1);
 
-    const beginning_date = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
-
+    const beginning_date = this.makeDateString(date);
     return beginning_date;
   }
 
@@ -62,11 +60,17 @@ class BugCounter {
     date.setMonth(date.getMonth() + 1);
     date.setDate(0);
 
-    const end_date = `${date.getFullYear()}-${
-      date.getMonth() + 1
-    }-${date.getDate()}`;
+    const end_date = this.makeDateString(date);
 
     return end_date;
+  }
+
+  private makeDateString(date: Date) {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); //API仕様に合わせるため桁数を2桁にする
+    const day = date.getDate().toString().padStart(2, "0"); //API仕様に合わせるため桁数を2桁にする
+
+    return `${year}-${month}-${day}`;
   }
 
   public start() {
@@ -281,7 +285,7 @@ class EngineerFixed extends Counter {
       },
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（${this.start_date} 以降） 」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（集計期間：　${this.start_date}　〜　${this.end_date}） 」」」」`
     );
     console.log(output);
 
@@ -370,7 +374,7 @@ class OffshoreFixed extends Counter {
       engineer_empry: this.engineer_empty_count,
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （${this.start_date} 以降）」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （集計期間：　${this.start_date}　〜　${this.end_date} ）」」」」`
     );
     console.log(output);
 
