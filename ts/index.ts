@@ -27,27 +27,27 @@ type BaseUriOption = {
 type UriOption = { [key: string]: string | number };
 
 class BugCounter {
-  constructor(date: { start?: string; end?: string }) {
+  constructor(date: { begin?: string; end?: string }) {
     // 引数なしで実行した場合、当月1日〜当月末を期間とする
-    this.start_date = date.start || this.setInitialStartDate();
-    this.end_date = date.end || this.setInitialEndDate(this.start_date);
+    this.begin_date = date.begin || this.setInitialBeginDate();
+    this.end_date = date.end || this.setInitialEndDate(this.begin_date);
     this.params = {
-      start: this.start_date,
+      begin: this.begin_date,
       end: this.end_date,
     };
   }
 
-  private start_date: string = "";
+  private begin_date: string = "";
   private end_date: string = "";
   private params: {
-    start: string;
+    begin: string;
     end: string;
   } = {
-    start: "",
+    begin: "",
     end: "",
   };
 
-  private setInitialStartDate() {
+  private setInitialBeginDate() {
     const date = new Date();
     date.setDate(1);
 
@@ -55,8 +55,8 @@ class BugCounter {
     return beginning_date;
   }
 
-  private setInitialEndDate(start_date: string) {
-    const date = new Date(start_date);
+  private setInitialEndDate(begin_date: string) {
+    const date = new Date(begin_date);
     date.setMonth(date.getMonth() + 1);
     date.setDate(0);
 
@@ -80,12 +80,12 @@ class BugCounter {
 }
 
 class Counter {
-  constructor(date: { start: string; end: string }) {
-    this.start_date = date.start;
+  constructor(date: { begin: string; end: string }) {
+    this.begin_date = date.begin;
     this.end_date = date.end;
   }
 
-  protected start_date: string = "";
+  protected begin_date: string = "";
   protected end_date: string = "";
 
   protected SPACE_ID = process.env.SPACE_ID || "";
@@ -181,7 +181,7 @@ class EngineerFixed extends Counter {
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_min`]:
-      this.start_date,
+      this.begin_date,
     [`customField_${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.ID}_max`]:
       this.end_date,
   };
@@ -285,7 +285,7 @@ class EngineerFixed extends Counter {
       },
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（集計期間：　${this.start_date}　〜　${this.end_date}） 」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.ENGINEER_FIN_DATE.NAME}（集計期間：　${this.begin_date}　〜　${this.end_date}） 」」」」`
     );
     console.log(output);
 
@@ -308,7 +308,7 @@ class OffshoreFixed extends Counter {
 
   private additional_option = {
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_min`]:
-      this.start_date,
+      this.begin_date,
     [`customField_${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.ID}_max`]:
       this.end_date,
   };
@@ -374,7 +374,7 @@ class OffshoreFixed extends Counter {
       engineer_empry: this.engineer_empty_count,
     };
     console.log(
-      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （集計期間：　${this.start_date}　〜　${this.end_date} ）」」」」`
+      `「「「「 ${this.CUSTOM_FIELDS.OFFSHORE_FIN_DATE.NAME} （集計期間：　${this.begin_date}　〜　${this.end_date} ）」」」」`
     );
     console.log(output);
 
@@ -388,7 +388,7 @@ class OffshoreFixed extends Counter {
 
 (async () => {
   new BugCounter({
-    start: process.argv[2],
+    begin: process.argv[2],
     end: process.argv[3],
   }).start();
 })();
